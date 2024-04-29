@@ -1,0 +1,21 @@
+@Dsptch.WebApi_HostAddress = http://localhost:5235
+
+GET {{Dsptch.WebApi_HostAddress}}/hello
+Accept: application/json
+
+###
+
+GET {{Dsptch.WebApi_HostAddress}}/hello/john
+Accept: application/json
+
+###
+
+GET {{Dsptch.WebApi_HostAddress}}/hello/custom/john
+Accept: application/json
+
+###
+
+GET {{Dsptch.WebApi_HostAddress}}/hello/123/john
+Accept: application/json
+
+###
