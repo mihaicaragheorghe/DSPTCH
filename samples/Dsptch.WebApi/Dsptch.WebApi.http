@@ -1,21 +1,21 @@
 @Dsptch.WebApi_HostAddress = http://localhost:5235
 
-GET {{Dsptch.WebApi_HostAddress}}/hello
+GET {{Dsptch.WebApi_HostAddress}}/products/4d8ff2f6-f9f2-426e-bc47-2c4a32ccb4e2
 Accept: application/json
 
 ###
 
-GET {{Dsptch.WebApi_HostAddress}}/hello/john
+GET {{Dsptch.WebApi_HostAddress}}/products?name=productName
 Accept: application/json
 
 ###
 
-GET {{Dsptch.WebApi_HostAddress}}/hello/custom/john
-Accept: application/json
+POST {{Dsptch.WebApi_HostAddress}}/products
+Content-Type: application/json
 
-###
-
-GET {{Dsptch.WebApi_HostAddress}}/hello/123/john
-Accept: application/json
+{
+    "Name": "productName",
+    "Price": 100.0
+}
 
 ###

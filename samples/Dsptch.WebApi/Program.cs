@@ -1,10 +1,11 @@
 using Dsptch.DependencyInjection;
 using Dsptch.Decorators;
-using Dsptch.WebApi.Commands;
-using Dsptch.WebApi.Queries;
 
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Dsptch.WebApi.Decorators;
+using Dsptch.WebApi.Queries;
+using Dsptch.WebApi.Commands;
+using Dsptch.WebApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,13 +20,11 @@ builder.Services.AddDsptch(opts =>
     // Registering dispatchers using DsptchConfiguration
     opts.RegisterDispatcherDecorator(typeof(LoggingDecorator<,>));
     opts.RegisterDispatcherDecorator(typeof(CachingDecorator<,>));
-    opts.RegisterDispatcherDecorator(typeof(CustomQueryDecorator<,>));
 });
 
 // Registering dispatchers manually
 builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(LoggingDecorator<,>));
 builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(CachingDecorator<,>));
-builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(CustomQueryDecorator<,>));
 
 var app = builder.Build();
 
@@ -39,32 +38,21 @@ app.UseHttpsRedirection();
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
 
-app.MapGet("/hello", async (IDispatcher dispatcher) =>
+app.MapGet("/products/{id}", async (IDispatcher dispatcher, Guid id) =>
 {
-    var command = new SampleCommand(42, "John Doe");
+    Product? product = await dispatcher.Dispatch<GetProductByIdQuery, Product?>(new GetProductByIdQuery(id));
 
-    return await dispatcher.Dispatch<SampleCommand, string>(command);
+    return product is not null ? Results.Ok(product) : Results.NotFound();
 });
 
-app.MapGet("/hello/{name}", async (IDispatcher dispatcher, string name) =>
+app.MapGet("products", async (IDispatcher dispatcher, string name) =>
 {
-    var query = new SampleQuery(name);
-
-    return await dispatcher.Dispatch(query);
+    return Results.Ok(await dispatcher.Dispatch<GetProductByNameQuery, List<Product>>(new GetProductByNameQuery(name)));
 });
 
-app.MapGet("/hello/custom/{name}", async (IDispatcher dispatcher, string name) =>
+app.MapPost("/products", async (IDispatcher dispatcher, CreateProductCommand command) =>
 {
-    var query = new QueryWithCustomDecorator(name);
-
-    return await dispatcher.Dispatch<QueryWithCustomDecorator, string>(query);
-});
-
-app.MapGet("/hello/{id:int}/{name}", async (IDispatcher dispatcher, int id, string name) =>
-{
-    var request = new SampleRequest(id, name);
-
-    return await dispatcher.Dispatch<SampleRequest, string>(request);
+    return Results.Ok(await dispatcher.Dispatch<CreateProductCommand, Guid>(command));
 });
 
 app.Run();

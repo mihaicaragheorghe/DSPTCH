@@ -3,10 +3,14 @@ using Dsptch.Decorators;
 
 namespace Dsptch.WebApi.Decorators;
 
-public class LoggingDecorator<TRequest, TResult>(ILogger<LoggingDecorator<TRequest, TResult>> logger)
-    : IDispatcherDecorator<TRequest, TResult> where TRequest : IRequest<TResult>
+public class LoggingDecorator<TRequest, TResult>(ILogger<TRequest> logger)
+    : IDispatcherDecorator<TRequest, TResult>
+        where TRequest : IRequest<TResult>
 {
-    public async Task<TResult> Dispatch(TRequest command, RequestHandlerDelegate<TResult> handler, CancellationToken cancellationToken = default)
+    public async Task<TResult> Dispatch(
+        TRequest command,
+        RequestHandlerDelegate<TResult> handler,
+        CancellationToken cancellationToken = default)
     {
         var requestName = typeof(TRequest).Name;
         logger.LogInformation("Dispatching request: {req}", requestName);

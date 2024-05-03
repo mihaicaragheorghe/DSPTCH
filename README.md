@@ -2,30 +2,22 @@
 
 Lightweight library for implementing CQRS and event dispatching in .NET.
 
-Efficiently handle requests and commands, decoupling the sender from the receiver, and facilitating cleaner, more maintainable code.
-
-## Dependecy Injection
-
-Use microsoft DI to register the dispatcher and handlers.
-
-```csharp
-services.AddDsptch(opts =>
-{
-    opts.RegisterServicesFromAssemblyContaining<Program>();
-});
-```
-
 ## CQRS
 
 Create a request, query or command by implementing the `IRequest`, `IQuery` or `ICommand` interface.
 
 ```csharp
-public record GetProductByIdQuery(Guid Id) : IQuery<Product>;
+public record GetProductByIdQuery(Guid Id)
+    : IQuery<Product>;
 
-public record CreateProductCommand(string Name) : ICommand<Guid>;
+public record GetProductByNameQuery(string Name)
+    : IRequest<List<Product>>;
+
+public record CreateProductCommand(string Name, decimal Price)
+    : ICommand<Guid>;
 ```
 
-IQuery and ICommand inherit from IRequest.
+`IQuery` and `ICommand` inherit from `IRequest`.
 
 ## Handlers
 
@@ -47,15 +39,12 @@ public class GetProductByIdQueryHandler(IProductRepository productRepository)
 Dispatch the request, query or command using the `IDispather` interface.
 
 ```csharp
-public class ProductsController(IDispatcher dispatcher)
+app.MapGet("/products/{id}", async (IDispatcher dispatcher, Guid id) =>
 {
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetProduct(Guid id)
-    {
-        Product? product = await dispatcher.Dispatch(new GetProductByIdQuery(id));
-        return product is null ? NotFound() : Ok(product);
-    }
-}
+    Product? product = await dispatcher.Dispatch<GetProductByIdQuery, Product?>(new GetProductByIdQuery(id));
+
+    return product is not null ? Results.Ok(product) : Results.NotFound();
+});
 ```
 
 ## Dispatch decorators
@@ -63,10 +52,15 @@ public class ProductsController(IDispatcher dispatcher)
 Use dispatch decorators to add cross-cutting concerns to the dispatching process.
 
 ```csharp
-public class LoggingDecorator<TRequest, TResult>(ILogger<LoggingDecorator<TRequest, TResult>> logger)
-    : IDispatcherDecorator<TRequest, TResult> where TRequest : IRequest<TResult>
+// This decorator will be called before and after every request is dispatched
+public class LoggingDecorator<TRequest, TResult>(ILogger<TRequest> logger)
+    : IDispatcherDecorator<TRequest, TResult>
+        where TRequest : IRequest<TResult>
 {
-    public async Task<TResult> Dispatch(TRequest command, RequestHandlerDelegate<TResult> handler, CancellationToken cancellationToken = default)
+    public async Task<TResult> Dispatch(
+        TRequest command,
+        RequestHandlerDelegate<TResult> handler,
+        CancellationToken cancellationToken = default)
     {
         var requestName = typeof(TRequest).Name;
         logger.LogInformation("Dispatching request: {req}", requestName);
@@ -86,6 +80,23 @@ public class LoggingDecorator<TRequest, TResult>(ILogger<LoggingDecorator<TReque
         }
     }
 }
+
+// This decorator will be called before and after every query is dispatched
+// It won't be called for IRequestHandler or ICommandHandler implementations
+public class CachingDecorator<TQuery, TResult>(
+    IMemoryCache cache,
+    ILogger<CachingDecorator<TQuery, TResult>> logger)
+        : IDispatcherDecorator<TQuery, TResult>
+            where TQuery : IQuery<TResult>
+{
+}
+
+// This decorator will only be called before and after every IAuthorizableRequest is dispatched
+public class AuthorizationDecorator<TQuery, TResult>
+    : IDispatcherDecorator<TQuery, TResult>
+        where TQuery : IAuthorizableRequest<TResult>
+{
+}
 ```
 
 ## Dependency Injection
@@ -100,16 +111,16 @@ builder.Services.AddDsptch(opts =>
     // Register dispatchers using DsptchConfiguration
     opts.RegisterDispatcherDecorator(typeof(LoggingDecorator<,>));
     opts.RegisterDispatcherDecorator(typeof(CachingDecorator<,>));
-    opts.RegisterDispatcherDecorator(typeof(CustomQueryDecorator<,>));
 });
 
 // Or register dispatchers manually
 builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(LoggingDecorator<,>));
 builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(CachingDecorator<,>));
-builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(CustomQueryDecorator<,>));
 ```
 
-The `RegisterServicesFromAssemblyContaining` method will register all handlers in the assembly containing the specified type.
+- The `AddDsptch` method will register the dispatcher and handlers in the specified assemblies.
+  - They will be registered as transient services by default, but this can be changed via `opts.Lifetime`.
+- The decorators can be registered using the `RegisterDispatcherDecorator` method.
 
 ## License
 

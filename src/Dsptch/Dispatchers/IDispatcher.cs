@@ -17,7 +17,4 @@ public interface IDispatcher
     /// <returns>The result of the command</returns>
     Task<TResult> Dispatch<TRequest, TResult>(TRequest request, CancellationToken cancellationToken = default)
         where TRequest : IRequest<TResult>;
-
-    /// <inheritdoc cref="Dispatch{TRequest,TResult}(TRequest,CancellationToken)"/>
-    Task<TResult> Dispatch<TResult>(IRequest<TResult> request, CancellationToken cancellationToken = default);
 }

@@ -4,11 +4,21 @@ using Dsptch.Decorators;
 using Dsptch.Handlers;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Dsptch.DependencyInjection;
 
 public static class DependencyInjectionRegistry
 {
+    /// <summary>
+    /// Registers the Dsptch services with the provided configuration.<br/>
+    /// - Will scan the provided assemblies for IRequestHandler implementations and register them with the service collection with the provided lifetime.<br/>
+    /// - Will also register the IDispatcher service with the service collection as a transient service.<br/>
+    /// - Will not register any decorators.<br/>
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configuration">The configuration action</param>
+    /// <returns>The service collection</returns>
     public static IServiceCollection AddDsptch(this IServiceCollection services,
         Action<DsptchConfiguration> configuration)
     {
@@ -19,6 +29,16 @@ public static class DependencyInjectionRegistry
         return services.AddDsptch(config);
     }
 
+
+    /// <summary>
+    /// Registers the Dsptch services with the provided configuration.<br/>
+    /// - Will scan the provided assemblies for IRequestHandler implementations and register them with the service collection with the provided lifetime.<br/>
+    /// - Will also register the IDispatcher service with the service collection as a transient service.<br/>
+    /// - Will not register any decorators.<br/>
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configuration">The configuration</param>
+    /// <returns>The service collection</returns>
     public static IServiceCollection AddDsptch(this IServiceCollection services,
         DsptchConfiguration configuration)
     {
@@ -32,7 +52,7 @@ public static class DependencyInjectionRegistry
             RegisterRequestHandlers(services, assembly, configuration.Lifetime);
         }
 
-        services.AddTransient<IDispatcher, Dispatcher>();
+        services.TryAdd(new ServiceDescriptor(typeof(IDispatcher), typeof(Dispatcher), configuration.Lifetime));
 
         foreach (var decorator in configuration.Decorators)
         {
