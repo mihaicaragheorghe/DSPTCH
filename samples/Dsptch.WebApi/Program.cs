@@ -16,7 +16,7 @@ builder.Services.AddDsptch(opts =>
 {
     opts.RegisterServicesFromAssemblyContaining<Program>();
 
-    // Registering dispatchers using the RegisterQueryDispatcher and RegisterCommandDispatcher methods
+    // Registering dispatchers using DsptchConfiguration
     opts.RegisterDispatcherDecorator(typeof(LoggingDecorator<,>));
     opts.RegisterDispatcherDecorator(typeof(CachingDecorator<,>));
     opts.RegisterDispatcherDecorator(typeof(CustomQueryDecorator<,>));
@@ -50,7 +50,7 @@ app.MapGet("/hello/{name}", async (IDispatcher dispatcher, string name) =>
 {
     var query = new SampleQuery(name);
 
-    return await dispatcher.Dispatch<SampleQuery, string>(query);
+    return await dispatcher.Dispatch(query);
 });
 
 app.MapGet("/hello/custom/{name}", async (IDispatcher dispatcher, string name) =>

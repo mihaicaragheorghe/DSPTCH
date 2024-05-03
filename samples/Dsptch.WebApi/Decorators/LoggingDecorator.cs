@@ -8,20 +8,20 @@ public class LoggingDecorator<TRequest, TResult>(ILogger<LoggingDecorator<TReque
 {
     public async Task<TResult> Dispatch(TRequest command, RequestHandlerDelegate<TResult> handler, CancellationToken cancellationToken = default)
     {
-        var commandName = typeof(TRequest).Name;
-        logger.LogInformation("Dispatching command: {command}", commandName);
+        var requestName = typeof(TRequest).Name;
+        logger.LogInformation("Dispatching request: {req}", requestName);
 
         try
         {
             var result = await handler();
 
-            logger.LogInformation("Command dispatched: {command}", commandName);
+            logger.LogInformation("Request dispatched: {req}", requestName);
 
             return result;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error dispatching command: {command}", commandName);
+            logger.LogError(ex, "Error dispatching request: {req}", requestName);
             throw;
         }
     }
