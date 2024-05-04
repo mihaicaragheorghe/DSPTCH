@@ -4,4 +4,4 @@ namespace Dsptch.Contracts;
 /// Marker interface for a query
 /// </summary>
 /// <typeparam name="TResult">The type of the response</typeparam>
-public interface IQuery<out TResult> : IRequest<TResult>;
+public interface IQuery<out TResult> : IRequest<TResult> { }

@@ -8,8 +8,8 @@ namespace Dsptch.DependencyInjection;
 
 public class DsptchConfiguration
 {
-    internal List<Assembly> Assemblies { get; } = [];
-    public List<ServiceDescriptor> Decorators { get; } = [];
+    internal List<Assembly> Assemblies { get; } = new();
+    public List<ServiceDescriptor> Decorators { get; } = new();
     public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Transient;
 
     public DsptchConfiguration RegisterServicesFromAssembly(Assembly assembly)

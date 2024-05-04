@@ -2,6 +2,14 @@
 
 Lightweight library for implementing CQRS and event dispatching in .NET.
 
+## Installation
+
+Install the package from [NuGet](https://www.nuget.org/packages/Dsptch).
+
+```bash
+dotnet add package DSPTCH
+```
+
 ## CQRS
 
 Create a request, query or command by implementing the `IRequest`, `IQuery` or `ICommand` interface.
