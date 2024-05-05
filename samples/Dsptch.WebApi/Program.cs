@@ -6,6 +6,7 @@ using Dsptch.WebApi.Decorators;
 using Dsptch.WebApi.Queries;
 using Dsptch.WebApi.Commands;
 using Dsptch.WebApi.Models;
+using Dsptch.WebApi.Requests;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,11 +21,11 @@ builder.Services.AddDsptch(opts =>
     // Registering dispatchers using DsptchConfiguration
     opts.RegisterDispatcherDecorator(typeof(LoggingDecorator<,>));
     opts.RegisterDispatcherDecorator(typeof(CachingDecorator<,>));
+    opts.RegisterDispatcherDecorator(typeof(AuthorizationDecorator<,>));
 });
 
-// Registering dispatchers manually
+// Or registering dispatchers manually
 builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(LoggingDecorator<,>));
-builder.Services.TryAddTransient(typeof(IDispatcherDecorator<,>), typeof(CachingDecorator<,>));
 
 var app = builder.Build();
 
@@ -53,6 +54,11 @@ app.MapGet("products", async (IDispatcher dispatcher, string name) =>
 app.MapPost("/products", async (IDispatcher dispatcher, CreateProductCommand command) =>
 {
     return Results.Ok(await dispatcher.Dispatch<CreateProductCommand, Guid>(command));
+});
+
+app.MapPost("/cart", async (IDispatcher dispatcher, AddProductToCartRequest request) =>
+{
+    return Results.Ok(await dispatcher.Dispatch<AddProductToCartRequest, bool>(request));
 });
 
 app.Run();

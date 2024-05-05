@@ -19,3 +19,11 @@ Content-Type: application/json
 }
 
 ###
+
+POST {{Dsptch.WebApi_HostAddress}}/cart
+Content-Type: application/json
+
+{
+    "ProductId": "4d8ff2f6-f9f2-426e-bc47-2c4a32ccb4e2",
+    "UserId": "4d8ff2f6-f9f2-426e-bc47-2c4a32ccb4e2"
+}

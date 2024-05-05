@@ -5,6 +5,10 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Dsptch.WebApi.Decorators;
 
+/// <summary>
+/// This decorator will only be called only for requests that implement the IQuery interface.
+/// It won't be called for commands (ICommand) or requests (IRequest).
+/// </summary>
 public class CachingDecorator<TQuery, TResult>
     : IDispatcherDecorator<TQuery, TResult> where TQuery : IQuery<TResult>
 {
@@ -17,7 +21,10 @@ public class CachingDecorator<TQuery, TResult>
         _logger = logger;
     }
 
-    public async Task<TResult> Dispatch(TQuery query, RequestHandlerDelegate<TResult> next, CancellationToken cancellationToken = default)
+    public async Task<TResult> Dispatch(
+        TQuery query,
+        RequestHandlerDelegate<TResult> next,
+        CancellationToken cancellationToken = default)
     {
         var queryName = typeof(TQuery).Name;
         var cacheKey = $"{typeof(TQuery).Name}:{query.GetHashCode()}";

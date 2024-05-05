@@ -3,6 +3,10 @@ using Dsptch.Decorators;
 
 namespace Dsptch.WebApi.Decorators;
 
+/// <summary>
+/// This decorator will log the request before and after it is dispatched.
+/// It will be called for all requests (IRequest), including commands and queries.
+/// </summary>
 public class LoggingDecorator<TRequest, TResult>
     : IDispatcherDecorator<TRequest, TResult>
         where TRequest : IRequest<TResult>
@@ -15,8 +19,8 @@ public class LoggingDecorator<TRequest, TResult>
     }
 
     public async Task<TResult> Dispatch(
-        TRequest command,
-        RequestHandlerDelegate<TResult> handler,
+        TRequest request,
+        RequestHandlerDelegate<TResult> next,
         CancellationToken cancellationToken = default)
     {
         var requestName = typeof(TRequest).Name;
@@ -24,7 +28,7 @@ public class LoggingDecorator<TRequest, TResult>
 
         try
         {
-            var result = await handler();
+            var result = await next();
 
             _logger.LogInformation("Request dispatched: {req}", requestName);
 
